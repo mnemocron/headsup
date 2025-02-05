@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, minimal-ui' />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Word Display</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #redButton, #greenButton {
+            color: white;
+            flex: 0 0 10%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1em; 
+            font-weight: bold;
+        }
+        #redButton { 
+            background: rgb(133,7,33);
+            background: linear-gradient(90deg, rgba(133,7,33,1) 0%, rgba(255,89,0,1) 100%); 
+        }
+        #greenButton {
+            background: rgb(7,133,121);
+            background: linear-gradient(90deg, rgba(7,133,121,1) 0%, rgba(78,255,0,1) 100%); 
+        }
+        #wordDisplay {
+            color: white;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5em;
+            /* transform: rotate(90deg); */
+            transform-origin: center;
+            position: relative;
+            background: rgb(0,46,180);
+            background: linear-gradient(45deg, rgba(0,46,180,1) 0%, rgba(0,176,255,1) 100%); 
+            /* width: calc(80vh); */
+        }
+        #word, #countdown, #score{
+            transform: rotate(90deg);
+        }
+        #countdown, #score {
+            color: white;
+            font-size: 0.5em;
+            position: absolute;
+            right: 0.5em;
+        }
+        #countdown {
+            bottom: 0.5em;
+        }
+        #score {
+            top: 0.5em;
+        }
+    </style>
+    <script src="mobile-movement.min.js"></script>
+</head>
+<body>
+    <div id="redButton" onclick="displayNextWord(false)"></div>
+    <div id="wordDisplay">
+        <span id="word">Heads Up!</span>
+        <span id="countdown">60</span>
+        <span id="score"></span>
+    </div>
+    <div id="greenButton" onclick="greenButtonAction()">START</div>
+
+    <script>
+        const words = ["Glirp", "Glarp", "Glorp", "Zablomborix", "Günther"]; // "Grisen", "DJ-ON", "Prima"]; // "KP2", "00-Niklas", "Meskalin", "Penka", "Flamingo", "Kaiser", "Bonn"];
+        let currentIndex = 0;
+        let counter = 0;
+        let countdownValue = 60;
+        var mm = null;
+        var counting = false;
+
+        function init() {
+                // Create a basic MobileMovement object.
+                mm = new MobileMovement();
+                mm.on("left turn landscape", function(info) {
+                        displayNextWord(true);
+                });
+                mm.on("right turn landscape", function(info) {
+                        displayNextWord(false);
+                });
+        }
+
+        function greenButtonAction() {
+            if(counting === false){
+                countdownValue = 60;
+                currentIndex = 0;
+                counting = true;
+                counter = 0;
+                setInterval(updateCountdown, 1000);
+            }
+            displayNextWord(true);
+        }
+
+        function displayNextWord(isGreenButton) {
+            document.getElementById("redButton").innerText = `SKIP`;
+            document.getElementById("greenButton").innerText = `CORRECT`;
+            if (currentIndex < words.length) {
+                document.getElementById("word").innerText = words[currentIndex];
+                currentIndex++;
+                if (isGreenButton) {
+                    counter++;
+                    document.getElementById("score").innerText = `${counter}`;
+                }
+                if (currentIndex === words.length) {
+                    clearInterval(countdownInterval);
+                    setTimeout(() => {
+                        document.getElementById("word").innerText = `${counter} Points!`;
+                        document.getElementById("redButton").innerText = ``;
+                        document.getElementById("greenButton").innerText = `PLAY AGAIN`;
+                        document.getElementById("score").innerText = ``;
+                        counting = false;
+                    }, 1000);
+                }
+            }
+            setTimeout(function(){
+                    dummy = dummy +1;
+            }, 1000);
+        }
+
+        function updateCountdown() {
+            if(counting === true){
+                countdownValue--;
+                document.getElementById("countdown").innerText = countdownValue;
+                if (countdownValue === 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById("word").innerText = `${counter} Points!`;
+                    document.getElementById("redButton").innerText = ``;
+                    document.getElementById("greenButton").innerText = `PLAY AGAIN`;
+                    document.getElementById("score").innerText = ``;
+                    counting = false;
+                }
+            }
+        }
+
+        window.addEventListener("load", init, false);
+
+        const countdownInterval = setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
