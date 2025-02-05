@@ -1,0 +1,5 @@
+
+# ignore libs in same directory
+mobile-movement.js
+mobile-movement.min.js
+
