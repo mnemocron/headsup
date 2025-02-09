@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, minimal-ui' />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Word Display</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="./ico/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./ico/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./ico/favicon-16x16.png">
+    <link rel="manifest" href="./ico/site.webmanifest">
+    <title>Heads Up!</title>
     <style>
         body {
             margin: 0;
@@ -62,39 +66,105 @@
             top: 0.5em;
         }
     </style>
-    <script src="mobile-movement.min.js"></script>
+    <script src="./assets/mobile-movement.min.js"></script>
 </head>
 <body>
-    <div id="redButton" onclick="displayNextWord(false)"></div>
+    <div id="redButton" onclick="redButtonAction()"></div>
     <div id="wordDisplay">
         <span id="word">Heads Up!</span>
-        <span id="countdown">60</span>
+        <span id="countdown"></span>
         <span id="score"></span>
     </div>
     <div id="greenButton" onclick="greenButtonAction()">START</div>
 
     <script>
-        const words = ["Glirp", "Glarp", "Glorp", "Zablomborix", "Günther"]; // "Grisen", "DJ-ON", "Prima"]; // "KP2", "00-Niklas", "Meskalin", "Penka", "Flamingo", "Kaiser", "Bonn"];
+        var words = ["Glirp", "Glarp", "Glorp", "Zablomborix", "Günther"]; // "Grisen", "DJ-ON", "Prima"]; // "KP2", "00-Niklas", "Meskalin", "Penka", "Flamingo", "Kaiser", "Bonn"];
         let currentIndex = 0;
         let counter = 0;
-        let countdownValue = 60;
+        var countdownValue = 0;
+        var coundwownStart = 60;
         var mm = null;
         var counting = false;
+        var dummy = 0;
+        var apiDir = 'wordlists'
 
-        function init() {
-                // Create a basic MobileMovement object.
-                mm = new MobileMovement();
-                mm.on("left turn landscape", function(info) {
-                        displayNextWord(true);
-                });
-                mm.on("right turn landscape", function(info) {
-                        displayNextWord(false);
-                });
+        async function init() {
+            // Create a basic MobileMovement object.
+            mm = new MobileMovement();
+            mm.on("left turn landscape", function(info) {
+                    displayNextWord(true);
+            });
+            mm.on("right turn landscape", function(info) {
+                    displayNextWord(false);
+            });
+            const gameString = window.location.search;
+            const gameParams = new URLSearchParams(gameString);
+            var gam = gameParams.get('game');
+            var tim = gameParams.get('time');
+            var jsonName = null;
+            if(tim === null){
+                tim = '60';
+            }
+            coundwownStart = parseInt(tim);
+
+            console.log(gam);
+            if(gam === null){
+                gam = 'default'
+            }
+            if(gam.localeCompare('default') === 0){
+                jsonName = 'mando.json';
+            } else if(gam.localeCompare('mando') === 0){
+                jsonName = 'mando.json';
+            } else if(gam.localeCompare('blaset') === 0){
+                jsonName = 'blaset.json';
+            } else {
+                showError('Unknown game: ' + gam);
+            }
+
+            const url = './' + apiDir + '/' + jsonName;
+            console.log(jsonName);
+            console.log(url);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Response status: ${response.status}`);
+                    showError('Could not load words');
+                }
+
+                const json = await response.json();
+                // console.log(json);
+                words = json["words"];
+                shuffleArray(words);
+            } catch (error) {
+                console.error(error.message);
+                showError('Could not load wordlist\n' + error.message);
+            }
+
+        }
+
+        // Durstenfeld shuffle
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i >= 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+        }
+
+        function showError(err){
+            document.getElementById("redButton").innerText = err;
+        }
+
+        function redButtonAction(){
+            if(counting === true){
+                displayNextWord(false);
+            }
         }
 
         function greenButtonAction() {
             if(counting === false){
-                countdownValue = 60;
+                countdownValue = coundwownStart;
                 currentIndex = 0;
                 counting = true;
                 counter = 0;
@@ -124,9 +194,12 @@
                     }, 1000);
                 }
             }
+            /*
+            // TODO: timeout? to prevent multiple pageflip events
             setTimeout(function(){
                     dummy = dummy +1;
             }, 1000);
+            */
         }
 
         function updateCountdown() {
@@ -144,9 +217,20 @@
             }
         }
 
+        /*
+        function toggleClass(el){
+            if(el.className == "button active"){
+                el.className = "button inactive";
+            } else {
+                el.className = "button active";
+            }
+        }*/
+
         window.addEventListener("load", init, false);
 
+        // create interval context but immediately stop counting
         const countdownInterval = setInterval(updateCountdown, 1000);
+        clearInterval(countdownInterval);
     </script>
 </body>
 </html>
