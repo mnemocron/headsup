@@ -66,7 +66,7 @@
             top: 0.5em;
         }
     </style>
-    <script src="./assets/mobile-movement.min.js"></script>
+    <script src="./assets/mobile-movement.js"></script>
 </head>
 <body>
     <div id="redButton" onclick="redButtonAction()"></div>
@@ -78,7 +78,7 @@
     <div id="greenButton" onclick="greenButtonAction()">START</div>
 
     <script>
-        var words = ["Glirp", "Glarp", "Glorp", "Zablomborix", "Günther"]; // "Grisen", "DJ-ON", "Prima"]; // "KP2", "00-Niklas", "Meskalin", "Penka", "Flamingo", "Kaiser", "Bonn"];
+        var words = ["Bug", "Another Bug", "Debugger"]; 
         let currentIndex = 0;
         let counter = 0;
         var countdownValue = 0;
@@ -91,11 +91,11 @@
         async function init() {
             // Create a basic MobileMovement object.
             mm = new MobileMovement();
-            mm.on("left turn landscape", function(info) {
-                    displayNextWord(true);
+            mm.on("look up landscape", function(info) {
+                greenButtonActionGyro(true);
             });
-            mm.on("right turn landscape", function(info) {
-                    displayNextWord(false);
+            mm.on("look down landscape", function(info) {
+                redButtonAction(false);
             });
             const gameString = window.location.search;
             const gameParams = new URLSearchParams(gameString);
@@ -162,12 +162,18 @@
             }
         }
 
+        function greenButtonActionGyro() {
+            if(counting === true){
+                displayNextWord(true);
+            }
+        }
+
         function greenButtonAction() {
             if(counting === false){
                 countdownValue = coundwownStart;
                 currentIndex = 0;
                 counting = true;
-                counter = 0;
+                counter = -1;
                 setInterval(updateCountdown, 1000);
             }
             displayNextWord(true);
